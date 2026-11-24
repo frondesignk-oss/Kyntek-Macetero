@@ -3,6 +3,8 @@
     <application
         android:allowBackup="true"
         android:label="Kynte-Macetas Inteligente"
+        android:icon="@drawable/kyntek_logo"
+        android:roundIcon="@drawable/kyntek_logo"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
