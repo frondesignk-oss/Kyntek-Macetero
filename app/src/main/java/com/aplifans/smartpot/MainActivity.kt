@@ -90,21 +90,18 @@ private fun KyntekApp() {
                 item {
                     Spacer(Modifier.height(46.dp))
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        // Se conserva la proporción original del logo y se reduce su tamaño.
                         Image(
                             painterResource(R.drawable.kyntek_logo),
                             contentDescription = "Logo Kyntek",
-                            modifier = Modifier.width(78.dp).height(58.dp),
+                            modifier = Modifier.size(76.dp),
                             contentScale = ContentScale.Fit
                         )
-                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text("KYNTEK", color = Green, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                            Text("MACETERO INTELIGENTE", color = Muted, fontSize = 10.sp, letterSpacing = 1.sp)
-                            Spacer(Modifier.height(4.dp))
-                            Text("Tu jardín, conectado", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                            Text("KYNTEK", color = Green, fontSize = 17.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                            Text("MACETERO INTELIGENTE", color = Muted, fontSize = 13.sp, letterSpacing = 1.sp)
                         }
-                        IconButton(onClick = { showGuide = true }) {
-                            Icon(Icons.Default.Book, "Guía de plantas", tint = Green, modifier = Modifier.size(25.dp))
+                        IconButton(onClick = { showGuide = true }, modifier = Modifier.size(48.dp)) {
+                            Icon(Icons.Default.Book, "Guía de plantas", tint = Green, modifier = Modifier.size(30.dp))
                         }
                     }
                     Spacer(Modifier.height(22.dp))
