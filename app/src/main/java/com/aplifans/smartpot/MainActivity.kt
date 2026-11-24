@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.BatteryFull
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.*
@@ -45,7 +46,14 @@ private val plantGuides = listOf(
     PlantGuide("Lirio de paz", "40–65%", "Regá cuando el sustrato empiece a perder humedad."),
     PlantGuide("Ficus", "30–55%", "Dejá secar parcialmente el sustrato entre riegos.")
 )
-private data class Pot(val id: Int, val name: String, val humidity: Int, val battery: Int)
+private data class Pot(
+    val id: Int,
+    val name: String,
+    val humidity: Int,
+    val battery: Int,
+    val location: String,
+    val targetHumidity: Int
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,12 +71,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun KyntekApp() {
     val pots = remember { mutableStateListOf(
-        Pot(1, "Monstera", 48, 86),
-        Pot(2, "Sansevieria", 24, 93)
+        Pot(1, "Monstera", 48, 86, "Comedor", 50),
+        Pot(2, "Sansevieria", 24, 93, "Patio", 25)
     ) }
     var showAdd by remember { mutableStateOf(false) }
     var showGuide by remember { mutableStateOf(false) }
+    var editingPot by remember { mutableStateOf<Pot?>(null) }
     var newName by remember { mutableStateOf("") }
+    var newLocation by remember { mutableStateOf("") }
+    var newTarget by remember { mutableFloatStateOf(45f) }
 
     Surface(Modifier.fillMaxSize(), color = Background) {
         Box(Modifier.fillMaxSize()) {
@@ -77,31 +88,26 @@ private fun KyntekApp() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(18.dp))
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Card(
-                            modifier = Modifier.size(width = 104.dp, height = 76.dp),
-                            shape = RoundedCornerShape(13.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Image(
-                                painterResource(R.drawable.kyntek_logo),
-                                contentDescription = "Logo Kyntek",
-                                modifier = Modifier.fillMaxSize().padding(3.dp),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-                        Column(Modifier.weight(1f).padding(start = 13.dp)) {
+                        // Se conserva la proporción original del logo y se reduce su tamaño.
+                        Image(
+                            painterResource(R.drawable.kyntek_logo),
+                            contentDescription = "Logo Kyntek",
+                            modifier = Modifier.width(78.dp).height(58.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Column(Modifier.weight(1f).padding(start = 10.dp)) {
                             Text("KYNTEK", color = Green, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                             Text("MACETERO INTELIGENTE", color = Muted, fontSize = 10.sp, letterSpacing = 1.sp)
-                            Spacer(Modifier.height(5.dp))
-                            Text("Tu jardín, conectado", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Tu jardín, conectado", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                         }
                         IconButton(onClick = { showGuide = true }) {
-                            Icon(Icons.Default.Book, "Guía de plantas", tint = Green, modifier = Modifier.size(27.dp))
+                            Icon(Icons.Default.Book, "Guía de plantas", tint = Green, modifier = Modifier.size(25.dp))
                         }
                     }
-                    Spacer(Modifier.height(26.dp))
+                    Spacer(Modifier.height(22.dp))
                     Text("Mis macetas", fontSize = 27.sp, fontWeight = FontWeight.Bold)
                     Text("Estado general de tus plantas", color = Muted, fontSize = 13.sp)
                 }
@@ -120,7 +126,9 @@ private fun KyntekApp() {
                         }
                     }
                 }
-                items(pots, key = { it.id }) { pot -> PotCard(pot) }
+                items(pots, key = { it.id }) { pot ->
+                    PotCard(pot = pot, onEdit = { editingPot = pot })
+                }
                 item {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = PanelSoft),
@@ -139,7 +147,12 @@ private fun KyntekApp() {
                 }
             }
             FloatingActionButton(
-                onClick = { showAdd = true },
+                onClick = {
+                    newName = ""
+                    newLocation = ""
+                    newTarget = 45f
+                    showAdd = true
+                },
                 containerColor = Green, contentColor = Color(0xFF102016),
                 modifier = Modifier.align(Alignment.BottomEnd).padding(22.dp)
             ) { Icon(Icons.Default.Add, "Agregar maceta") }
@@ -151,10 +164,12 @@ private fun KyntekApp() {
             onDismissRequest = { showAdd = false },
             title = { Text("Nueva maceta") },
             text = {
-                OutlinedTextField(
-                    value = newName, onValueChange = { newName = it },
-                    label = { Text("Nombre de la planta") }, singleLine = true
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(value = newName, onValueChange = { newName = it }, label = { Text("Nombre de la planta") }, singleLine = true)
+                    OutlinedTextField(value = newLocation, onValueChange = { newLocation = it }, label = { Text("Ubicación (ej. Comedor, patio)") }, singleLine = true)
+                    Text("Humedad objetivo: ${newTarget.toInt()}%", color = Green, fontWeight = FontWeight.SemiBold)
+                    Slider(value = newTarget, onValueChange = { newTarget = it }, valueRange = 0f..100f)
+                }
             },
             confirmButton = {
                 TextButton(
@@ -163,13 +178,46 @@ private fun KyntekApp() {
                         val id = (pots.maxOfOrNull { it.id } ?: 0) + 1
                         val humidity = listOf(42, 56, 31, 68, 47)[(id - 1) % 5]
                         val battery = listOf(91, 84, 76, 98, 88)[(id - 1) % 5]
-                        pots.add(Pot(id, newName.trim(), humidity, battery))
-                        newName = ""
+                        pots.add(Pot(id, newName.trim(), humidity, battery, newLocation.trim().ifBlank { "Sin ubicación" }, newTarget.toInt()))
                         showAdd = false
                     }
                 ) { Text("Agregar") }
             },
             dismissButton = { TextButton(onClick = { showAdd = false }) { Text("Cancelar") } }
+        )
+    }
+
+    editingPot?.let { pot ->
+        var editName by remember(pot.id) { mutableStateOf(pot.name) }
+        var editLocation by remember(pot.id) { mutableStateOf(pot.location) }
+        var editTarget by remember(pot.id) { mutableFloatStateOf(pot.targetHumidity.toFloat()) }
+        AlertDialog(
+            onDismissRequest = { editingPot = null },
+            title = { Text("Editar maceta") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(value = editName, onValueChange = { editName = it }, label = { Text("Nombre de la planta") }, singleLine = true)
+                    OutlinedTextField(value = editLocation, onValueChange = { editLocation = it }, label = { Text("Ubicación") }, singleLine = true)
+                    Text("Humedad objetivo: ${editTarget.toInt()}%", color = Green, fontWeight = FontWeight.SemiBold)
+                    Slider(value = editTarget, onValueChange = { editTarget = it }, valueRange = 0f..100f)
+                    Text("Este valor define el objetivo de humedad para esta planta. No modifica la lectura simulada del sensor.", color = Muted, fontSize = 11.sp)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = editName.isNotBlank(),
+                    onClick = {
+                        val index = pots.indexOfFirst { it.id == pot.id }
+                        if (index >= 0) pots[index] = pot.copy(
+                            name = editName.trim(),
+                            location = editLocation.trim().ifBlank { "Sin ubicación" },
+                            targetHumidity = editTarget.toInt()
+                        )
+                        editingPot = null
+                    }
+                ) { Text("Guardar") }
+            },
+            dismissButton = { TextButton(onClick = { editingPot = null }) { Text("Cancelar") } }
         )
     }
 
@@ -185,15 +233,10 @@ private fun KyntekApp() {
             text = {
                 LazyColumn(Modifier.height(430.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                     item {
-                        Text(
-                            "Referencias orientativas del indicador Kyntek. No son porcentajes universales de agua en el suelo.",
-                            color = Muted, fontSize = 12.sp
-                        )
+                        Text("Referencias orientativas del indicador. No son porcentajes universales de agua en el suelo.", color = Muted, fontSize = 12.sp)
                     }
                     items(plantGuides) { plant ->
-                        Column(
-                            Modifier.fillMaxWidth().background(PanelSoft, RoundedCornerShape(12.dp)).padding(11.dp)
-                        ) {
+                        Column(Modifier.fillMaxWidth().background(PanelSoft, RoundedCornerShape(12.dp)).padding(11.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(plant.name, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                                 Text(plant.range, color = Green, fontWeight = FontWeight.Bold, fontSize = 13.sp)
@@ -203,10 +246,7 @@ private fun KyntekApp() {
                         }
                     }
                     item {
-                        Text(
-                            "Importante: el sensor capacitivo debe calibrarse con el sustrato de cada maceta. La mezcla, compactación y ubicación de la sonda pueden cambiar la lectura.",
-                            color = Muted, fontSize = 11.sp
-                        )
+                        Text("Importante: el sensor capacitivo debe calibrarse con el sustrato de cada maceta. La mezcla, compactación y ubicación de la sonda pueden cambiar la lectura.", color = Muted, fontSize = 11.sp)
                     }
                 }
             },
@@ -228,10 +268,10 @@ private fun SummaryCard(title: String, value: String, detail: String, modifier: 
 }
 
 @Composable
-private fun PotCard(pot: Pot) {
+private fun PotCard(pot: Pot, onEdit: () -> Unit) {
     val color = when {
-        pot.humidity < 30 -> Color(0xFFFFC36A)
-        pot.humidity > 70 -> Blue
+        pot.humidity < pot.targetHumidity -> Color(0xFFFFC36A)
+        pot.humidity > 80 -> Blue
         else -> Green
     }
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
@@ -242,21 +282,27 @@ private fun PotCard(pot: Pot) {
                 }
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(pot.name, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Dispositivo de demostración", color = Muted, fontSize = 11.sp)
+                    Text("⌖ ${pot.location}", color = Muted, fontSize = 12.sp)
+                    Text("Dispositivo de demostración", color = Muted, fontSize = 10.sp)
                 }
                 Text("DEMO", color = Blue, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Editar maceta", tint = Green)
+                }
             }
-            Spacer(Modifier.height(17.dp))
+            Spacer(Modifier.height(15.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.WaterDrop, null, tint = color, modifier = Modifier.size(19.dp))
-                Text(" Humedad del sustrato", color = Muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                Text(" Humedad actual", color = Muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
                 Text("${pot.humidity}%", color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(8.dp))
             Box(Modifier.fillMaxWidth().height(8.dp).background(PanelSoft, CircleShape)) {
                 Box(Modifier.fillMaxWidth(pot.humidity.coerceIn(0, 100) / 100f).height(8.dp).background(color, CircleShape))
             }
-            Spacer(Modifier.height(15.dp))
+            Spacer(Modifier.height(6.dp))
+            Text("Objetivo configurado: ${pot.targetHumidity}%", color = Muted, fontSize = 11.sp)
+            Spacer(Modifier.height(13.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.BatteryFull, null, tint = Green, modifier = Modifier.size(17.dp))
                 Text(" Batería", color = Muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
