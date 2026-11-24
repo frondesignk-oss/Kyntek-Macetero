@@ -88,7 +88,7 @@ private fun KyntekApp() {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(Modifier.height(46.dp))
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         // Se conserva la proporción original del logo y se reduce su tamaño.
                         Image(
@@ -108,14 +108,19 @@ private fun KyntekApp() {
                         }
                     }
                     Spacer(Modifier.height(22.dp))
-                    Text("Mis macetas", fontSize = 27.sp, fontWeight = FontWeight.Bold)
-                    Text("Estado general de tus plantas", color = Muted, fontSize = 13.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Mis macetas", fontSize = 27.sp, fontWeight = FontWeight.Bold)
+                            Text("Estado general de tus plantas", color = Muted, fontSize = 13.sp)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("0", color = Green, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                            Text("conectadas", color = Muted, fontSize = 11.sp)
+                        }
+                    }
                 }
                 item {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        SummaryCard("MACETAS", pots.size.toString(), "registradas", Modifier.weight(1f))
-                        SummaryCard("DISPOSITIVOS", "Demo", "modo visual", Modifier.weight(1f))
-                    }
+                    SummaryCard("MACETAS REGISTRADAS", pots.size.toString(), "en tu jardín", Modifier.fillMaxWidth())
                 }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -269,44 +274,38 @@ private fun SummaryCard(title: String, value: String, detail: String, modifier: 
 
 @Composable
 private fun PotCard(pot: Pot, onEdit: () -> Unit) {
-    val color = when {
+    val humidityColor = when {
         pot.humidity < pot.targetHumidity -> Color(0xFFFFC36A)
         pot.humidity > 80 -> Blue
         else -> Green
     }
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(17.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(42.dp).background(PanelSoft, CircleShape), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.Eco, null, tint = Green)
-                }
-                Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(pot.name, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                    Text("⌖ ${pot.location}", color = Muted, fontSize = 12.sp)
-                    Text("Dispositivo de demostración", color = Muted, fontSize = 10.sp)
-                }
+        Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 15.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(42.dp).background(PanelSoft, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Eco, null, tint = Green)
+            }
+            Column(Modifier.weight(1f).padding(start = 9.dp), verticalArrangement = Arrangement.Center) {
+                Text(pot.name, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text(pot.location, color = Muted, fontSize = 11.sp, maxLines = 1)
                 Text("DEMO", color = Blue, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Editar maceta", tint = Green)
+            }
+            IconButton(onClick = onEdit, modifier = Modifier.size(34.dp)) {
+                Icon(Icons.Default.Edit, contentDescription = "Editar maceta", tint = Green, modifier = Modifier.size(19.dp))
+            }
+            Spacer(Modifier.width(5.dp))
+            Column(Modifier.width(104.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.WaterDrop, null, tint = humidityColor, modifier = Modifier.size(15.dp))
+                    Text(" ${pot.humidity}%", color = humidityColor, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    Text("H", color = Muted, fontSize = 9.sp)
                 }
-            }
-            Spacer(Modifier.height(15.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.WaterDrop, null, tint = color, modifier = Modifier.size(19.dp))
-                Text(" Humedad actual", color = Muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
-                Text("${pot.humidity}%", color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(8.dp))
-            Box(Modifier.fillMaxWidth().height(8.dp).background(PanelSoft, CircleShape)) {
-                Box(Modifier.fillMaxWidth(pot.humidity.coerceIn(0, 100) / 100f).height(8.dp).background(color, CircleShape))
-            }
-            Spacer(Modifier.height(6.dp))
-            Text("Objetivo configurado: ${pot.targetHumidity}%", color = Muted, fontSize = 11.sp)
-            Spacer(Modifier.height(13.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.BatteryFull, null, tint = Green, modifier = Modifier.size(17.dp))
-                Text(" Batería", color = Muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
-                Text("${pot.battery}%", color = Green, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.BatteryFull, null, tint = Green, modifier = Modifier.size(15.dp))
+                    Text(" ${pot.battery}%", color = Green, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.weight(1f))
+                    Text("B", color = Muted, fontSize = 9.sp)
+                }
             }
         }
     }
