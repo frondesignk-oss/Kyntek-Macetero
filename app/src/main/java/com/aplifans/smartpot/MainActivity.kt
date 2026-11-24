@@ -3,224 +3,265 @@ package com.aplifans.smartpot
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val Forest = Color(0xFF8BCF9B)
-private val Background = Color(0xFF101713)
-private val Panel = Color(0xFF1B2820)
-private val Muted = Color(0xFFA8B8AC)
+private val Green = Color(0xFF8DD6A5)
+private val Background = Color(0xFF0D1512)
+private val Panel = Color(0xFF19251F)
+private val PanelSoft = Color(0xFF26362D)
+private val Muted = Color(0xFFA6B7AC)
+private val Blue = Color(0xFF54B9FF)
 
-data class Pot(val name: String)
+private data class PlantGuide(val name: String, val range: String, val advice: String)
+private val plantGuides = listOf(
+    PlantGuide("Monstera", "35–60%", "Dejá secar la capa superior antes de volver a regar."),
+    PlantGuide("Potus", "30–55%", "Tolera períodos algo más secos; evitá el sustrato empapado."),
+    PlantGuide("Sansevieria", "15–35%", "Necesita secados marcados entre riegos. Regá con moderación."),
+    PlantGuide("Cactus y suculentas", "10–25%", "Usá sustrato muy drenante y esperá a que se seque bien."),
+    PlantGuide("Helechos", "45–70%", "Prefieren humedad más constante, sin agua acumulada."),
+    PlantGuide("Calathea", "45–65%", "Mantené humedad moderada y estable; evitá encharcar."),
+    PlantGuide("Lirio de paz", "40–65%", "Regá cuando el sustrato empiece a perder humedad."),
+    PlantGuide("Ficus", "30–55%", "Dejá secar parcialmente el sustrato entre riegos.")
+)
+private data class Pot(val id: Int, val name: String, val humidity: Int, val battery: Int)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(
-                colorScheme = darkColorScheme(
-                    primary = Forest,
-                    background = Background,
-                    surface = Panel,
-                    onPrimary = Color(0xFF102016),
-                    onBackground = Color(0xFFF1F5F1),
-                    onSurface = Color(0xFFF1F5F1)
-                )
-            ) {
-                KyntekApp()
-            }
+            MaterialTheme(colorScheme = darkColorScheme(
+                primary = Green, background = Background, surface = Panel,
+                onPrimary = Color(0xFF102016), onBackground = Color(0xFFF1F5F1),
+                onSurface = Color(0xFFF1F5F1)
+            )) { KyntekApp() }
         }
     }
 }
 
 @Composable
 private fun KyntekApp() {
-    val pots = remember { mutableStateListOf<Pot>() }
-    var showAddDialog by remember { mutableStateOf(false) }
-    var newPotName by remember { mutableStateOf("") }
+    val pots = remember { mutableStateListOf(
+        Pot(1, "Monstera", 48, 86),
+        Pot(2, "Sansevieria", 24, 93)
+    ) }
+    var showAdd by remember { mutableStateOf(false) }
+    var showGuide by remember { mutableStateOf(false) }
+    var newName by remember { mutableStateOf("") }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Background
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+    Surface(Modifier.fillMaxSize(), color = Background) {
+        Box(Modifier.fillMaxSize()) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp)
+                Modifier.fillMaxSize().padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    Spacer(Modifier.height(30.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .background(Panel, CircleShape)
-                                .padding(12.dp)
+                    Spacer(Modifier.height(24.dp))
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Card(
+                            modifier = Modifier.size(width = 104.dp, height = 76.dp),
+                            shape = RoundedCornerShape(13.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
-                            Icon(Icons.Default.Eco, contentDescription = null, tint = Forest)
+                            Image(
+                                painterResource(R.drawable.kyntek_logo),
+                                contentDescription = "Logo Kyntek",
+                                modifier = Modifier.fillMaxSize().padding(3.dp),
+                                contentScale = ContentScale.Fit
+                            )
                         }
-                        Column(modifier = Modifier.padding(start = 12.dp)) {
-                            Text("KYNTEK", fontSize = 12.sp, color = Forest, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                            Text("Macetero inteligente", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                        Column(Modifier.weight(1f).padding(start = 13.dp)) {
+                            Text("KYNTEK", color = Green, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                            Text("MACETERO INTELIGENTE", color = Muted, fontSize = 10.sp, letterSpacing = 1.sp)
+                            Spacer(Modifier.height(5.dp))
+                            Text("Tu jardín, conectado", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        IconButton(onClick = { showGuide = true }) {
+                            Icon(Icons.Default.Book, "Guía de plantas", tint = Green, modifier = Modifier.size(27.dp))
                         }
                     }
-                    Spacer(Modifier.height(28.dp))
-                    Text("Tu jardín", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                    Text("Controlá tus macetas desde un solo lugar", color = Muted, fontSize = 14.sp)
+                    Spacer(Modifier.height(26.dp))
+                    Text("Mis macetas", fontSize = 27.sp, fontWeight = FontWeight.Bold)
+                    Text("Estado general de tus plantas", color = Muted, fontSize = 13.sp)
                 }
-
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SummaryCard("MACETAS", pots.size.toString(), "registradas", Modifier.weight(1f))
+                        SummaryCard("DISPOSITIVOS", "Demo", "modo visual", Modifier.weight(1f))
+                    }
+                }
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Tus plantas", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { showGuide = true }) {
+                            Icon(Icons.Default.Book, null, modifier = Modifier.size(17.dp))
+                            Text(" Guía")
+                        }
+                    }
+                }
+                items(pots, key = { it.id }) { pot -> PotCard(pot) }
                 item {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Panel),
-                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = PanelSoft),
+                        shape = RoundedCornerShape(17.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(Modifier.padding(20.dp)) {
-                            Text("MIS MACETAS", color = Forest, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                            Spacer(Modifier.height(10.dp))
-                            Text("${pots.size}", fontSize = 34.sp, fontWeight = FontWeight.Bold)
-                            Text(if (pots.size == 1) "maceta registrada" else "macetas registradas", color = Muted, fontSize = 13.sp)
-                        }
-                    }
-                }
-
-                if (pots.isEmpty()) {
-                    item {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Panel),
-                            shape = RoundedCornerShape(22.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth().padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(Icons.Default.WaterDrop, contentDescription = null, tint = Forest, modifier = Modifier.height(42.dp))
-                                Spacer(Modifier.height(12.dp))
-                                Text("Todavía no hay macetas", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                                Spacer(Modifier.height(6.dp))
-                                Text(
-                                    "Agregá tu primera maceta para empezar a organizar tu jardín inteligente.",
-                                    color = Muted,
-                                    fontSize = 13.sp
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                Button(onClick = { showAddDialog = true }) {
-                                    Icon(Icons.Default.Add, contentDescription = null)
-                                    Text(" Agregar maceta")
-                                }
+                        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.WaterDrop, null, tint = Blue)
+                            Column(Modifier.padding(start = 10.dp)) {
+                                Text("Lecturas de demostración", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                Text("Los porcentajes son ficticios hasta vincular el ESP32.", color = Muted, fontSize = 11.sp)
                             }
                         }
                     }
-                } else {
-                    items(pots.size) { index ->
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Panel),
-                            shape = RoundedCornerShape(20.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(18.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.Eco, contentDescription = null, tint = Forest)
-                                Column(Modifier.padding(start = 14.dp)) {
-                                    Text(pots[index].name, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-                                    Text("Pendiente de vincular dispositivo", color = Muted, fontSize = 12.sp)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Text(
-                        "Versión inicial · Los datos todavía no provienen de sensores",
-                        color = Muted,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(bottom = 90.dp)
-                    )
+                    Spacer(Modifier.height(86.dp))
                 }
             }
-
             FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = Forest,
-                contentColor = Color(0xFF102016),
+                onClick = { showAdd = true },
+                containerColor = Green, contentColor = Color(0xFF102016),
                 modifier = Modifier.align(Alignment.BottomEnd).padding(22.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar maceta")
-            }
+            ) { Icon(Icons.Default.Add, "Agregar maceta") }
         }
     }
 
-    if (showAddDialog) {
+    if (showAdd) {
         AlertDialog(
-            onDismissRequest = { showAddDialog = false },
+            onDismissRequest = { showAdd = false },
             title = { Text("Nueva maceta") },
             text = {
                 OutlinedTextField(
-                    value = newPotName,
-                    onValueChange = { newPotName = it },
-                    label = { Text("Nombre (ej. Monstera)") },
-                    singleLine = true
+                    value = newName, onValueChange = { newName = it },
+                    label = { Text("Nombre de la planta") }, singleLine = true
                 )
             },
             confirmButton = {
                 TextButton(
+                    enabled = newName.isNotBlank(),
                     onClick = {
-                        val name = newPotName.trim()
-                        if (name.isNotEmpty()) {
-                            pots.add(Pot(name))
-                            newPotName = ""
-                            showAddDialog = false
-                        }
-                    },
-                    enabled = newPotName.isNotBlank()
+                        val id = (pots.maxOfOrNull { it.id } ?: 0) + 1
+                        val humidity = listOf(42, 56, 31, 68, 47)[(id - 1) % 5]
+                        val battery = listOf(91, 84, 76, 98, 88)[(id - 1) % 5]
+                        pots.add(Pot(id, newName.trim(), humidity, battery))
+                        newName = ""
+                        showAdd = false
+                    }
                 ) { Text("Agregar") }
             },
-            dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) { Text("Cancelar") }
-            }
+            dismissButton = { TextButton(onClick = { showAdd = false }) { Text("Cancelar") } }
         )
+    }
+
+    if (showGuide) {
+        AlertDialog(
+            onDismissRequest = { showGuide = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Book, null, tint = Green)
+                    Text("  Guía de humedad")
+                }
+            },
+            text = {
+                LazyColumn(Modifier.height(430.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    item {
+                        Text(
+                            "Referencias orientativas del indicador Kyntek. No son porcentajes universales de agua en el suelo.",
+                            color = Muted, fontSize = 12.sp
+                        )
+                    }
+                    items(plantGuides) { plant ->
+                        Column(
+                            Modifier.fillMaxWidth().background(PanelSoft, RoundedCornerShape(12.dp)).padding(11.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(plant.name, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                Text(plant.range, color = Green, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(plant.advice, color = Muted, fontSize = 11.sp)
+                        }
+                    }
+                    item {
+                        Text(
+                            "Importante: el sensor capacitivo debe calibrarse con el sustrato de cada maceta. La mezcla, compactación y ubicación de la sonda pueden cambiar la lectura.",
+                            color = Muted, fontSize = 11.sp
+                        )
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showGuide = false }) { Text("Cerrar") } }
+        )
+    }
+}
+
+@Composable
+private fun SummaryCard(title: String, value: String, detail: String, modifier: Modifier = Modifier) {
+    Card(modifier, colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(18.dp)) {
+        Column(Modifier.padding(16.dp)) {
+            Text(title, color = Muted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Spacer(Modifier.height(7.dp))
+            Text(value, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+            Text(detail, color = Muted, fontSize = 11.sp)
+        }
+    }
+}
+
+@Composable
+private fun PotCard(pot: Pot) {
+    val color = when {
+        pot.humidity < 30 -> Color(0xFFFFC36A)
+        pot.humidity > 70 -> Blue
+        else -> Green
+    }
+    Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(17.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(42.dp).background(PanelSoft, CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Eco, null, tint = Green)
+                }
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                    Text(pot.name, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Dispositivo de demostración", color = Muted, fontSize = 11.sp)
+                }
+                Text("DEMO", color = Blue, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(17.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.WaterDrop, null, tint = color, modifier = Modifier.size(19.dp))
+                Text(" Humedad del sustrato", color = Muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                Text("${pot.humidity}%", color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(8.dp))
+            Box(Modifier.fillMaxWidth().height(8.dp).background(PanelSoft, CircleShape)) {
+                Box(Modifier.fillMaxWidth(pot.humidity.coerceIn(0, 100) / 100f).height(8.dp).background(color, CircleShape))
+            }
+            Spacer(Modifier.height(15.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.BatteryFull, null, tint = Green, modifier = Modifier.size(17.dp))
+                Text(" Batería", color = Muted, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                Text("${pot.battery}%", color = Green, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            }
+        }
     }
 }
