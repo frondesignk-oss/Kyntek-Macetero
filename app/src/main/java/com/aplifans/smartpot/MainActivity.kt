@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private val Green = Color(0xFF8DD6A5)
-private val Background = Color(0xFF0D1512)
+private val Background = Color(0xFF000000)
 private val Panel = Color(0xFF19251F)
 private val PanelSoft = Color(0xFF26362D)
 private val Muted = Color(0xFFA6B7AC)
