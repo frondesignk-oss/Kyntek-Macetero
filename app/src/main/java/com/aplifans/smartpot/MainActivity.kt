@@ -35,16 +35,16 @@ private val PanelSoft = Color(0xFF26362D)
 private val Muted = Color(0xFFA6B7AC)
 private val Blue = Color(0xFF54B9FF)
 
-private data class PlantGuide(val name: String, val range: String, val advice: String)
+private data class PlantGuide(val name: String, val range: String)
 private val plantGuides = listOf(
-    PlantGuide("Monstera", "35–60%", "Dejá secar la capa superior antes de volver a regar."),
-    PlantGuide("Potus", "30–55%", "Tolera períodos algo más secos; evitá el sustrato empapado."),
-    PlantGuide("Sansevieria", "15–35%", "Necesita secados marcados entre riegos. Regá con moderación."),
-    PlantGuide("Cactus y suculentas", "10–25%", "Usá sustrato muy drenante y esperá a que se seque bien."),
-    PlantGuide("Helechos", "45–70%", "Prefieren humedad más constante, sin agua acumulada."),
-    PlantGuide("Calathea", "45–65%", "Mantené humedad moderada y estable; evitá encharcar."),
-    PlantGuide("Lirio de paz", "40–65%", "Regá cuando el sustrato empiece a perder humedad."),
-    PlantGuide("Ficus", "30–55%", "Dejá secar parcialmente el sustrato entre riegos.")
+    PlantGuide("Monstera", "35–60%"),
+    PlantGuide("Potus", "30–55%"),
+    PlantGuide("Sansevieria", "15–35%"),
+    PlantGuide("Cactus y suculentas", "10–25%"),
+    PlantGuide("Helechos", "45–70%"),
+    PlantGuide("Calathea", "45–65%"),
+    PlantGuide("Lirio de paz", "40–65%"),
+    PlantGuide("Ficus", "30–55%")
 )
 private data class Pot(
     val id: Int,
@@ -246,8 +246,6 @@ private fun KyntekApp() {
                                 Text(plant.name, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                                 Text(plant.range, color = Green, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             }
-                            Spacer(Modifier.height(4.dp))
-                            Text(plant.advice, color = Muted, fontSize = 11.sp)
                         }
                     }
                     item {
@@ -296,7 +294,7 @@ private fun PotCard(pot: Pot, onEdit: () -> Unit) {
             }
             Column(Modifier.weight(1f).padding(start = 9.dp), verticalArrangement = Arrangement.Center) {
                 Text(pot.name, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Text(pot.location, color = Muted, fontSize = 11.sp, maxLines = 1)
+                Text(pot.location, color = Muted, fontSize = 13.sp, maxLines = 1)
             }
             Spacer(Modifier.width(5.dp))
             Column(Modifier.width(104.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
