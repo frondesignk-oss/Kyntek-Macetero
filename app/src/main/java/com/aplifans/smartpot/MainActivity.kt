@@ -1,6 +1,13 @@
 package com.aplifans.smartpot
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -19,6 +26,7 @@ import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,9 +63,20 @@ private data class Pot(
     val targetHumidity: Int
 )
 
+private const val BATTERY_CHANNEL_ID = "kyntek_battery_alerts"
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createBatteryNotificationChannel()
+        val notificationPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { }
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(
                 primary = Green, background = Background, surface = Panel,
@@ -66,10 +85,43 @@ class MainActivity : ComponentActivity() {
             )) { KyntekApp() }
         }
     }
+
+    private fun createBatteryNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                BATTERY_CHANNEL_ID,
+                "Alertas de batería de macetas",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Avisos cuando la batería de una maceta llega al 10% o al 5%"
+            }
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
+    }
+}
+
+private fun sendBatteryNotification(context: Context, pot: Pot, threshold: Int) {
+    if (Build.VERSION.SDK_INT >= 33 &&
+        context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+    ) return
+
+    val title = if (threshold == 5) "Batería crítica" else "Batería baja"
+    val message = "${pot.name} (${pot.location}): batería al ${pot.battery}%."
+    val notification = android.app.Notification.Builder(context, BATTERY_CHANNEL_ID)
+        .setSmallIcon(android.R.drawable.ic_dialog_alert)
+        .setContentTitle(title)
+        .setContentText(message)
+        .setStyle(android.app.Notification.BigTextStyle().bigText(message))
+        .setAutoCancel(true)
+        .build()
+    val notificationId = pot.id * 100 + threshold
+    context.getSystemService(NotificationManager::class.java).notify(notificationId, notification)
 }
 
 @Composable
 private fun KyntekApp() {
+    val context = LocalContext.current
+    val alertedBatteryLevels = remember { mutableStateMapOf<String, Boolean>() }
     val pots = remember { mutableStateListOf(
         Pot(1, "Monstera", 48, 86, "Comedor", 50),
         Pot(2, "Sansevieria", 24, 93, "Patio", 25)
@@ -80,6 +132,22 @@ private fun KyntekApp() {
     var newName by remember { mutableStateOf("") }
     var newLocation by remember { mutableStateOf("") }
     var newTarget by remember { mutableFloatStateOf(45f) }
+
+    LaunchedEffect(pots.map { it.id to it.battery }) {
+        pots.forEach { pot ->
+            listOf(10, 5).forEach { threshold ->
+                val alertKey = "${pot.id}:$threshold"
+                if (pot.battery <= threshold && alertedBatteryLevels[alertKey] != true) {
+                    sendBatteryNotification(context, pot, threshold)
+                    alertedBatteryLevels[alertKey] = true
+                }
+            }
+            if (pot.battery > 10) {
+                alertedBatteryLevels.remove("${pot.id}:10")
+                alertedBatteryLevels.remove("${pot.id}:5")
+            }
+        }
+    }
 
     Surface(Modifier.fillMaxSize(), color = Background) {
         Box(Modifier.fillMaxSize()) {
