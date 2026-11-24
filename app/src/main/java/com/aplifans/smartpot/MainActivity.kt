@@ -100,13 +100,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private fun sendBatteryNotification(context: Context, pot: Pot, threshold: Int) {
+private fun sendBatteryNotification(context: Context, threshold: Int) {
     if (Build.VERSION.SDK_INT >= 33 &&
         context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
     ) return
 
     val title = if (threshold == 5) "Batería crítica" else "Batería baja"
-    val message = "${pot.name} (${pot.location}): batería al ${pot.battery}%."
+    val message = if (threshold == 5) {
+        "Una o más macetas tienen la batería al 5% o menos."
+    } else {
+        "Una o más macetas tienen la batería al 10% o menos."
+    }
     val notification = android.app.Notification.Builder(context, BATTERY_CHANNEL_ID)
         .setSmallIcon(android.R.drawable.ic_dialog_alert)
         .setContentTitle(title)
@@ -114,14 +118,14 @@ private fun sendBatteryNotification(context: Context, pot: Pot, threshold: Int) 
         .setStyle(android.app.Notification.BigTextStyle().bigText(message))
         .setAutoCancel(true)
         .build()
-    val notificationId = pot.id * 100 + threshold
-    context.getSystemService(NotificationManager::class.java).notify(notificationId, notification)
+    // Un único ID hace que la alerta crítica reemplace a la alerta de batería baja.
+    context.getSystemService(NotificationManager::class.java).notify(1001, notification)
 }
 
 @Composable
 private fun KyntekApp() {
     val context = LocalContext.current
-    val alertedBatteryLevels = remember { mutableStateMapOf<String, Boolean>() }
+    var lastBatteryAlert by remember { mutableIntStateOf(0) }
     val pots = remember { mutableStateListOf(
         Pot(1, "Monstera", 48, 86, "Comedor", 50),
         Pot(2, "Sansevieria", 24, 93, "Patio", 25)
@@ -134,19 +138,19 @@ private fun KyntekApp() {
     var newTarget by remember { mutableFloatStateOf(45f) }
 
     LaunchedEffect(pots.map { it.id to it.battery }) {
-        pots.forEach { pot ->
-            listOf(10, 5).forEach { threshold ->
-                val alertKey = "${pot.id}:$threshold"
-                if (pot.battery <= threshold && alertedBatteryLevels[alertKey] != true) {
-                    sendBatteryNotification(context, pot, threshold)
-                    alertedBatteryLevels[alertKey] = true
-                }
-            }
-            if (pot.battery > 10) {
-                alertedBatteryLevels.remove("${pot.id}:10")
-                alertedBatteryLevels.remove("${pot.id}:5")
-            }
+        val lowestBattery = pots.minOfOrNull { it.battery } ?: 100
+        val alertLevel = when {
+            lowestBattery <= 5 -> 2
+            lowestBattery <= 10 -> 1
+            else -> 0
         }
+
+        if (alertLevel > lastBatteryAlert) {
+            sendBatteryNotification(context, if (alertLevel == 2) 5 else 10)
+        }
+        // Se vuelve a habilitar una nueva alerta cuando todas las macetas superan el 10%.
+        if (alertLevel == 0) lastBatteryAlert = 0
+        else if (alertLevel > lastBatteryAlert) lastBatteryAlert = alertLevel
     }
 
     Surface(Modifier.fillMaxSize(), color = Background) {
