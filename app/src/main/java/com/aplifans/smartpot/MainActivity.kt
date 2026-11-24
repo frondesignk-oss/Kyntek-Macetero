@@ -281,16 +281,18 @@ private fun PotCard(pot: Pot, onEdit: () -> Unit) {
     }
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 15.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(42.dp).background(PanelSoft, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.Eco, null, tint = Green)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(Modifier.size(42.dp).background(PanelSoft, CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Eco, null, tint = Green)
+                }
+                IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Edit, contentDescription = "Editar maceta", tint = Green, modifier = Modifier.size(18.dp))
+                }
             }
             Column(Modifier.weight(1f).padding(start = 9.dp), verticalArrangement = Arrangement.Center) {
                 Text(pot.name, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                 Text(pot.location, color = Muted, fontSize = 11.sp, maxLines = 1)
                 Text("DEMO", color = Blue, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            }
-            IconButton(onClick = onEdit, modifier = Modifier.size(34.dp)) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar maceta", tint = Green, modifier = Modifier.size(19.dp))
             }
             Spacer(Modifier.width(5.dp))
             Column(Modifier.width(104.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
