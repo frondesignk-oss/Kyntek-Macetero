@@ -60,7 +60,9 @@ private data class Pot(
     val humidity: Int,
     val battery: Int,
     val location: String,
-    val targetHumidity: Int
+    val targetHumidity: Int,
+    // Se completa cuando el ESP32 informa su identificador persistente.
+    val deviceId: String? = null
 )
 
 private const val BATTERY_CHANNEL_ID = "kyntek_battery_alerts"
@@ -272,6 +274,20 @@ private fun KyntekApp() {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(value = editName, onValueChange = { editName = it }, label = { Text("Nombre de la planta") }, singleLine = true)
                     OutlinedTextField(value = editLocation, onValueChange = { editLocation = it }, label = { Text("Ubicación") }, singleLine = true)
+                    OutlinedTextField(
+                        value = pot.deviceId ?: "Pendiente de vinculación",
+                        onValueChange = {},
+                        enabled = false,
+                        label = { Text("ID de maceta (ESP32)") },
+                        supportingText = {
+                            Text(
+                                if (pot.deviceId == null) "Se completará al vincular el ESP32"
+                                else "Identificador único del dispositivo"
+                            )
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Text("Humedad objetivo: ${editTarget.toInt()}%", color = Green, fontWeight = FontWeight.SemiBold)
                     Slider(value = editTarget, onValueChange = { editTarget = it }, valueRange = 0f..100f)
                     Text("Este valor define el objetivo de humedad para esta planta. No modifica la lectura simulada del sensor.", color = Muted, fontSize = 11.sp)
