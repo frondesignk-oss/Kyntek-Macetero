@@ -263,11 +263,16 @@ private fun KyntekApp() {
 @Composable
 private fun SummaryCard(title: String, value: String, detail: String, modifier: Modifier = Modifier) {
     Card(modifier, colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(18.dp)) {
-        Column(Modifier.padding(16.dp)) {
-            Text(title, color = Muted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-            Spacer(Modifier.height(7.dp))
-            Text(value, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-            Text(detail, color = Muted, fontSize = 11.sp)
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(title, color = Muted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Spacer(Modifier.height(5.dp))
+                Text(detail, color = Muted, fontSize = 11.sp)
+            }
+            Text(value, color = Green, fontSize = 27.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -292,21 +297,16 @@ private fun PotCard(pot: Pot, onEdit: () -> Unit) {
             Column(Modifier.weight(1f).padding(start = 9.dp), verticalArrangement = Arrangement.Center) {
                 Text(pot.name, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                 Text(pot.location, color = Muted, fontSize = 11.sp, maxLines = 1)
-                Text("DEMO", color = Blue, fontSize = 9.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.width(5.dp))
             Column(Modifier.width(104.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.WaterDrop, null, tint = humidityColor, modifier = Modifier.size(15.dp))
                     Text(" ${pot.humidity}%", color = humidityColor, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.weight(1f))
-                    Text("H", color = Muted, fontSize = 9.sp)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.BatteryFull, null, tint = Green, modifier = Modifier.size(15.dp))
                     Text(" ${pot.battery}%", color = Green, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.weight(1f))
-                    Text("B", color = Muted, fontSize = 9.sp)
                 }
             }
         }
