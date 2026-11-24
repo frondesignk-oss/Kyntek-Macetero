@@ -24,8 +24,10 @@ jobs:
           gradle-version: "8.9"
       - name: Build debug APK
         run: gradle assembleDebug
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/Kynte-Macetas Inteligente.apk"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: kyntek-macetero-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Kynte-Macetas-Inteligente
+          path: "app/build/outputs/apk/debug/Kynte-Macetas Inteligente.apk"
